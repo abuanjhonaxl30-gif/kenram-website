@@ -141,3 +141,41 @@ export function docId(name: string): string {
   const parts = name.split("/");
   return parts[parts.length - 1];
 }
+
+// Plain JS values -> Firestore REST "fields" format.
+// Strings at Date lang ang sinusuportahan (sapat para sa inquiries).
+function toFields(data: Record<string, string | Date>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (value instanceof Date) out[key] = { timestampValue: value.toISOString() };
+    else out[key] = { stringValue: value };
+  }
+  return out;
+}
+
+// Gumagawa ng bagong document (auto-ID) sa isang collection.
+export async function createDocument(
+  collection: string,
+  data: Record<string, string | Date>
+): Promise<string> {
+  const { projectId } = getEnv();
+  const token = await getAccessToken();
+
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collection}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ fields: toFields(data) }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Firestore create failed: ${res.status} ${await res.text()}`);
+  }
+
+  const doc = (await res.json()) as { name: string };
+  return docId(doc.name);
+}

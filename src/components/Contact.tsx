@@ -1,26 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { submitInquiry } from "@/lib/inquiries";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 export default function Contact() {
   const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("sending");
+    setErrorMsg("");
 
     const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form).entries());
+    const result = await submitInquiry(new FormData(form));
 
-    try {
-      // TODO: ikonekta sa src/lib/inquiries.ts (server action o API route)
-      console.log("Inquiry:", data);
-      await new Promise((resolve) => setTimeout(resolve, 500));
+    if (result.ok) {
       form.reset();
       setStatus("sent");
-    } catch {
+    } else {
+      setErrorMsg(result.error);
       setStatus("error");
     }
   }
@@ -37,8 +38,7 @@ export default function Contact() {
         </p>
         <ul className="mt-6 space-y-2 text-gray-700">
           <li>📍 Isulan, Sultan Kudarat</li>
-          <li>📞 0900-000-0000</li>
-          <li>✉️ hello@example.com</li>
+          <li>📞 0997-243-4914</li>
         </ul>
       </div>
 
@@ -54,6 +54,14 @@ export default function Contact() {
           placeholder="Which vehicle and dates are you interested in?"
           className={inputClass}
         />
+        {/* Honeypot — huwag alisin */}
+        <input
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          className="hidden"
+        />
         <button
           type="submit"
           disabled={status === "sending"}
@@ -64,9 +72,7 @@ export default function Contact() {
         {status === "sent" && (
           <p className="text-green-600">Salamat! We&apos;ll get back to you soon.</p>
         )}
-        {status === "error" && (
-          <p className="text-red-600">May error. Please try again.</p>
-        )}
+        {status === "error" && <p className="text-red-600">{errorMsg}</p>}
       </form>
     </section>
   );

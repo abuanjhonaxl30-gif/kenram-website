@@ -1,23 +1,39 @@
-export type InquiryInput = {
-  name: string;
-  phone: string;
-  vehicle: string;
-  preferredDate: string;
-  message: string;
-};
+"use server";
 
-// DYNAMIC imports din dito — walang static na "import ... from firebase"
-// sa taas ng file na 'to, kaya walang Firebase code na kasama sa server
-// bundle. Tatakbo lang itong lahat sa browser, pag-submit ng form.
-export async function submitInquiry(input: InquiryInput): Promise<void> {
-  const { collection, addDoc, serverTimestamp } = await import("firebase/firestore");
-  const { getDb } = await import("@/lib/firebase");
+import { createDocument } from "@/lib/firebase-admin";
 
-  const db = await getDb();
+export type InquiryResult = { ok: true } | { ok: false; error: string };
 
-  await addDoc(collection(db, "inquiries"), {
-    ...input,
-    status: "new",
-    createdAt: serverTimestamp(),
-  });
+function clean(value: FormDataEntryValue | null, max: number): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+export async function submitInquiry(formData: FormData): Promise<InquiryResult> {
+  // Honeypot: tinatago sa tao, pinupunan ng bots.
+  if (clean(formData.get("website"), 100)) return { ok: true };
+
+  const name = clean(formData.get("name"), 100);
+  const phone = clean(formData.get("phone"), 30);
+  const email = clean(formData.get("email"), 120);
+  const date = clean(formData.get("date"), 20);
+  const message = clean(formData.get("message"), 1000);
+
+  if (!name || !phone || !message) {
+    return { ok: false, error: "Pakilagay ang pangalan, phone, at mensahe." };
+  }
+
+  try {
+    await createDocument("inquiries", {
+      name,
+      phone,
+      email,
+      date,
+      message,
+      createdAt: new Date(),
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error("submitInquiry failed:", err);
+    return { ok: false, error: "May error sa pagpapadala. Subukan ulit o tumawag sa 0997-243-4914." };
+  }
 }
