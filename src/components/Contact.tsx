@@ -5,9 +5,16 @@ import { submitInquiry } from "@/lib/inquiries";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
-export default function Contact() {
+function todayLocal(): string {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+
+export default function Contact({ car = "" }: { car?: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [pickup, setPickup] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,6 +26,7 @@ export default function Contact() {
 
     if (result.ok) {
       form.reset();
+      setPickup("");
       setStatus("sent");
     } else {
       setErrorMsg(result.error);
@@ -28,6 +36,8 @@ export default function Contact() {
 
   const inputClass =
     "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const labelClass = "mb-1 block text-sm font-medium text-gray-700";
+  const today = todayLocal();
 
   return (
     <section className="mx-auto grid max-w-5xl gap-10 px-4 py-16 md:grid-cols-2">
@@ -43,17 +53,72 @@ export default function Contact() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="name" required placeholder="Full name" className={inputClass} />
-        <input name="phone" required placeholder="Phone number" className={inputClass} />
-        <input name="email" type="email" placeholder="Email (optional)" className={inputClass} />
-        <input name="date" type="date" className={inputClass} />
-        <textarea
-          name="message"
-          required
-          rows={4}
-          placeholder="Which vehicle and dates are you interested in?"
-          className={inputClass}
-        />
+        <div>
+          <label htmlFor="name" className={labelClass}>Full name</label>
+          <input id="name" name="name" required className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className={labelClass}>Phone number</label>
+          <input id="phone" name="phone" type="tel" required className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="email" className={labelClass}>Email (optional)</label>
+          <input id="email" name="email" type="email" className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="destination" className={labelClass}>Destination</label>
+          <input
+            id="destination"
+            name="destination"
+            required
+            placeholder="e.g. General Santos City"
+            className={inputClass}
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="pickupDate" className={labelClass}>Pick-up date</label>
+            <input
+              id="pickupDate"
+              name="pickupDate"
+              type="date"
+              required
+              min={today}
+              value={pickup}
+              onChange={(e) => setPickup(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="returnDate" className={labelClass}>Return date</label>
+            <input
+              id="returnDate"
+              name="returnDate"
+              type="date"
+              required
+              min={pickup || today}
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="message" className={labelClass}>Vehicle / notes (optional)</label>
+          <textarea
+            key={car}
+            id="message"
+            name="message"
+            rows={3}
+            defaultValue={car ? `Interested in ${car}` : ""}
+            placeholder="Which vehicle are you interested in?"
+            className={inputClass}
+          />
+        </div>
+
         {/* Honeypot — huwag alisin */}
         <input
           name="website"
@@ -62,6 +127,7 @@ export default function Contact() {
           aria-hidden="true"
           className="hidden"
         />
+
         <button
           type="submit"
           disabled={status === "sending"}

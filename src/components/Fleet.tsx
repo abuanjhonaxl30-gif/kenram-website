@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getFleet } from "@/lib/vehicles";
 
 export default async function Fleet() {
@@ -72,12 +73,12 @@ export default async function Fleet() {
                   <div className="flex items-center gap-6 font-body text-sm text-muted">
                     <span>{vehicle.transmission}</span>
                     <span>{vehicle.seats} seats</span>
-                    <a
-                      href="/contact"
+                    <Link
+                      href={`/contact?car=${encodeURIComponent(vehicle.name)}`}
                       className="font-medium text-navy underline decoration-line underline-offset-4 transition-colors hover:decoration-amber"
                     >
                       Inquire
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </div>

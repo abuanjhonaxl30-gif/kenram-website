@@ -9,12 +9,19 @@ export const metadata: Metadata = {
     "Get in touch with Kenram Car Rental in Isulan, Sultan Kudarat — send an inquiry and we'll confirm availability and rate.",
 };
 
-export default function ContactPage() {
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ car?: string }>;
+}) {
+  const { car } = await searchParams;
+  const selectedCar = (car ?? "").slice(0, 80);
+
   return (
     <>
       <Navbar />
       <main>
-        <Contact />
+        <Contact car={selectedCar} />
       </main>
       <Footer />
     </>
