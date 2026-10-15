@@ -1,6 +1,7 @@
 "use server";
 
 import { createDocument } from "@/lib/firebase-admin";
+import { getBusyCars } from "@/lib/availability";
 
 export type InquiryResult = { ok: true } | { ok: false; error: string };
 
@@ -21,17 +22,28 @@ export async function submitInquiry(formData: FormData): Promise<InquiryResult> 
   const pickupDate = clean(formData.get("pickupDate"), 10);
   const returnDate = clean(formData.get("returnDate"), 10);
   const message = clean(formData.get("message"), 1000);
+  const car = clean(formData.get("car"), 80);
 
   if (!name || !phone || !destination) {
-    return { ok: false, error: "Pakilagay ang pangalan, phone, at destination." };
+    return { ok: false, error: "Please enter your name, phone number, and destination." };
   }
 
   if (!DATE_RE.test(pickupDate) || !DATE_RE.test(returnDate)) {
-    return { ok: false, error: "Pakilagay ang pick-up date at return date." };
+    return { ok: false, error: "Please enter your pick-up date and return date." };
   }
 
   if (returnDate < pickupDate) {
-    return { ok: false, error: "Hindi puwedeng mas maaga ang return date kaysa pick-up date." };
+    return { ok: false, error: "The return date can't be earlier than the pick-up date." };
+  }
+
+  if (car) {
+    const busy = await getBusyCars();
+    if (busy.has(car.toLowerCase())) {
+      return {
+        ok: false,
+        error: `Sorry, ${car} is no longer available. Please choose another vehicle or call 0997-243-4914.`,
+      };
+    }
   }
 
   try {
@@ -43,11 +55,12 @@ export async function submitInquiry(formData: FormData): Promise<InquiryResult> 
       pickupDate,
       returnDate,
       message,
+      carName: car,
       createdAt: new Date(),
     });
     return { ok: true };
   } catch (err) {
     console.error("submitInquiry failed:", err);
-    return { ok: false, error: "May error sa pagpapadala. Subukan ulit o tumawag sa 0997-243-4914." };
+    return { ok: false, error: "Something went wrong. Please try again or call 0997-243-4914." };
   }
 }

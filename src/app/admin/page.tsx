@@ -156,7 +156,7 @@ export default async function AdminPage({
               Login
             </button>
             {error && (
-              <p className="font-body text-sm text-red-600">Maling password.</p>
+              <p className="font-body text-sm text-red-600">Incorrect password.</p>
             )}
           </form>
         </div>
@@ -205,7 +205,7 @@ export default async function AdminPage({
 
         {inquiries.length === 0 ? (
           <div className="mt-4 rounded-xl border border-dashed border-line bg-white/60 p-10 text-center">
-            <p className="font-body text-sm text-muted">Wala pang inquiry.</p>
+            <p className="font-body text-sm text-muted">No inquiries yet.</p>
           </div>
         ) : (
           <ul className="mt-4 space-y-4">

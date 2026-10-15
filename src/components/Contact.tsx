@@ -53,6 +53,8 @@ export default function Contact({ car = "" }: { car?: string }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <input type="hidden" name="car" value={car} />
+
         <div>
           <label htmlFor="name" className={labelClass}>Full name</label>
           <input id="name" name="name" required className={inputClass} />
@@ -136,7 +138,7 @@ export default function Contact({ car = "" }: { car?: string }) {
           {status === "sending" ? "Sending..." : "Send inquiry"}
         </button>
         {status === "sent" && (
-          <p className="text-green-600">Salamat! We&apos;ll get back to you soon.</p>
+          <p className="text-green-600">Thank you! Well get back to you soon.</p>
         )}
         {status === "error" && <p className="text-red-600">{errorMsg}</p>}
       </form>
