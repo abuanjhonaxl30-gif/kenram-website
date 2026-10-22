@@ -4,11 +4,38 @@ export type Vehicle = {
   id: string;
   name: string;
   transmission: "Automatic" | "Manual";
+  fuelType: string; // "Unleaded" | "Diesel" | "" kung hindi alam
   seats: number;
   goodFor: string;
   image: string;
   available: boolean;
 };
+
+// Fuel type batay sa pangalan ng kotse, kung walang `fuelType` field sa Firestore.
+const FUEL_BY_MODEL: Array<[string, string]> = [
+  ["avanza", "Unleaded"],
+  ["vios", "Unleaded"],
+  ["wigo", "Unleaded"],
+  ["hiace", "Diesel"],
+  ["innova", "Diesel"],
+];
+
+function resolveFuelType(name: string, raw: unknown): string {
+  // 1) Kung may `fuelType` field sa Firestore, iyon ang uunahin.
+  if (typeof raw === "string" && raw.trim()) {
+    const v = raw.trim().toLowerCase();
+    if (v.includes("diesel")) return "Diesel";
+    if (v.includes("unleaded") || v.includes("gas")) return "Unleaded";
+    return raw.trim();
+  }
+
+  // 2) Kung wala, hulaan batay sa pangalan.
+  const lower = name.toLowerCase();
+  for (const [model, fuel] of FUEL_BY_MODEL) {
+    if (lower.includes(model)) return fuel;
+  }
+  return "";
+}
 
 // Mga booking status na HINDI humaharang sa kotse (libre na ulit).
 const INACTIVE_STATUSES = new Set([
@@ -89,6 +116,7 @@ export async function getFleet(): Promise<Vehicle[]> {
         id,
         name,
         transmission: data.transmission === "Manual" ? "Manual" : "Automatic",
+        fuelType: resolveFuelType(name, data.fuelType),
         seats: typeof data.seats === "number" ? data.seats : 0,
         goodFor: typeof data.goodFor === "string" ? data.goodFor : "",
         image: typeof data.image === "string" ? data.image : "",

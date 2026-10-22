@@ -1,5 +1,5 @@
 import { getFleet } from "@/lib/vehicles";
-import { getBusyCars } from "@/lib/availability";
+import { getBusyCars, getBookedRanges, todayManila } from "@/lib/availability";
 import FleetCard from "@/components/FleetCard";
 
 // "2026-10-18" -> "Oct 19" (kinabukasan ng return date)
@@ -15,11 +15,20 @@ function availableAgain(returnDate: string): string {
 }
 
 export default async function Fleet() {
-  const [fleet, busy] = await Promise.all([getFleet(), getBusyCars()]);
+  const [fleet, busy, bookedRanges] = await Promise.all([
+    getFleet(),
+    getBusyCars(),
+    getBookedRanges(),
+  ]);
+  const today = todayManila();
 
   const cards = fleet.map((vehicle) => {
     const until = busy.get(vehicle.name.trim().toLowerCase());
-    return { vehicle, until, isAvailable: vehicle.available && !until };
+    const ranges = [
+      ...(bookedRanges.get(`name:${vehicle.name.trim().toLowerCase()}`) ?? []),
+      ...(bookedRanges.get(`id:${vehicle.id.trim().toLowerCase()}`) ?? []),
+    ];
+    return { vehicle, until, ranges, isAvailable: vehicle.available && !until };
   });
   const availableCount = cards.filter((c) => c.isAvailable).length;
 
@@ -53,7 +62,7 @@ export default async function Fleet() {
           </p>
         ) : (
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {cards.map(({ vehicle, until, isAvailable }) => (
+            {cards.map(({ vehicle, until, ranges, isAvailable }) => (
               <FleetCard
                 key={vehicle.id}
                 vehicle={{
@@ -63,9 +72,12 @@ export default async function Fleet() {
                   goodFor: vehicle.goodFor,
                   transmission: vehicle.transmission,
                   seats: vehicle.seats,
+                  fuelType: vehicle.fuelType,
                 }}
                 isAvailable={isAvailable}
                 availableAgain={until ? availableAgain(until) : ""}
+                bookedRanges={ranges}
+                today={today}
               />
             ))}
           </div>

@@ -15,8 +15,8 @@ export default function Hero() {
             <a href="/fleet" className="rounded-sm bg-amber px-6 py-3 font-body text-sm font-medium text-cream transition-colors hover:bg-amber-light">
               See available cars
             </a>
-            <a href="tel:09972434914" className="font-body text-sm font-medium text-navy underline decoration-line underline-offset-4 transition-colors hover:decoration-amber">
-              Or call 0997-243-4914
+            <a href="mailto:abuanjhonaxl@gmail.com" className="font-body text-sm font-medium text-navy underline decoration-line underline-offset-4 transition-colors hover:decoration-amber">
+              Or Email us.
             </a>
           </div>
         </div>

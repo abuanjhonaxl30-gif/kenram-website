@@ -3,6 +3,8 @@
 import { useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import AvailabilityCalendar from "@/components/AvailabilityCalendar";
+import type { DateRange } from "@/lib/availability";
 
 export type FleetCardVehicle = {
   id: string;
@@ -11,6 +13,7 @@ export type FleetCardVehicle = {
   goodFor: string;
   transmission: string;
   seats: number | string;
+  fuelType?: string;
 };
 
 // ============================================================
@@ -19,7 +22,7 @@ export type FleetCardVehicle = {
 // Facebook page username lang (yung nasa dulo ng facebook.com/<username>)
 const OWNER_MESSENGER_USERNAME = "YOUR_PAGE_USERNAME";
 // Email address ng owner
-const OWNER_EMAIL = "abuanjhonaxl30@gmail.com";
+const OWNER_EMAIL = "owner@example.com";
 
 // Background ng bawat sasakyan: maliwanag sa gitna, may banayad na "sahig" sa ilalim.
 const STAGE_BG =
@@ -29,9 +32,17 @@ type Props = {
   vehicle: FleetCardVehicle;
   isAvailable: boolean;
   availableAgain: string; // hal. "Oct 19", o "" kung wala
+  bookedRanges?: DateRange[]; // mga naka-book na petsa ng kotseng ito
+  today?: string; // YYYY-MM-DD (Asia/Manila)
 };
 
-export default function FleetCard({ vehicle, isAvailable, availableAgain }: Props) {
+export default function FleetCard({
+  vehicle,
+  isAvailable,
+  availableAgain,
+  bookedRanges = [],
+  today,
+}: Props) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -135,6 +146,11 @@ export default function FleetCard({ vehicle, isAvailable, availableAgain }: Prop
             <span className="rounded-full border border-line px-3 py-1 font-body text-xs text-ink">
               {vehicle.seats} seats
             </span>
+            {vehicle.fuelType && (
+              <span className="rounded-full border border-line px-3 py-1 font-body text-xs text-ink">
+                {vehicle.fuelType}
+              </span>
+            )}
           </div>
 
           <div className="mt-6 flex-1" />
@@ -198,6 +214,12 @@ export default function FleetCard({ vehicle, isAvailable, availableAgain }: Prop
                   <dt className="text-muted">Transmission</dt>
                   <dd className="font-medium text-ink">{vehicle.transmission}</dd>
                 </div>
+                {vehicle.fuelType && (
+                  <div className="flex justify-between py-3">
+                    <dt className="text-muted">Fuel type</dt>
+                    <dd className="font-medium text-ink">{vehicle.fuelType}</dd>
+                  </div>
+                )}
                 <div className="flex justify-between py-3">
                   <dt className="text-muted">Seats</dt>
                   <dd className="font-medium text-ink">{vehicle.seats} passengers</dd>
@@ -212,6 +234,15 @@ export default function FleetCard({ vehicle, isAvailable, availableAgain }: Prop
                 Rates depend on your destination and rental length. Send an inquiry and
                 we&apos;ll confirm the price and availability.
               </p>
+
+              {today && (
+                <div className="mt-6">
+                  <p className="mb-2 font-body text-sm font-semibold text-navy">
+                    Availability
+                  </p>
+                  <AvailabilityCalendar ranges={bookedRanges} today={today} />
+                </div>
+              )}
 
               <div className="mt-6 flex-1" />
 
